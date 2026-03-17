@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUÂN ADM .VN - SIÊU CẤP V14</title>
+    <style>
+        :root { --gold: #ffd700; --bg: #050505; --red: #ff0000; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; text-align: center; }
+        .hidden { display: none !important; }
+        
+        /* 1. HIỆU ỨNG RỒNG & PHƯỢNG */
+        #intro-overlay, #win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        #dragon-win { width: 350px; animation: bounce 1s infinite; }
+        .win-text { font-size: 50px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px red; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+
+        /* 2. GIAO DIỆN CHÍNH */
+        .container { width: 95%; max-width: 1100px; margin: auto; padding-top: 20px; }
+        .box { background: #111; border: 1px solid #333; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+        .adm-border { border: 2px solid var(--gold) !important; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+        .adm-title { font-size: 30px; font-weight: 900; animation: rainbow 1.5s infinite; text-transform: uppercase; }
+        @keyframes rainbow { 0% {color: red;} 33% {color: lime;} 66% {color: cyan;} 100% {color: red;} }
+
+        /* 3. TÀI XỈU */
+        #timer { font-size: 80px; font-weight: 900; color: #ff0; text-shadow: 0 0 15px #ff0; }
+        #dice-res { font-size: 90px; margin: 10px 0; letter-spacing: 10px; }
+        .btn-bet { width: 45%; height: 70px; font-size: 30px; font-weight: 900; border: none; border-radius: 15px; cursor: pointer; }
+
+        /* 4. CHAT & CODE (SỬA LỖI KHÔNG ẤN ĐƯỢC) */
+        .grid-ctrl { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-top: 10px; }
+        @media (max-width: 800px) { .grid-ctrl { grid-template-columns: 1fr; } }
+
+        .chat-area { height: 220px; background: #000; border-radius: 12px; overflow-y: auto; text-align: left; padding: 15px; border: 1px solid #222; }
+        .msg-adm { color: gold; font-weight: 900; text-shadow: 0 0 10px gold; font-size: 18px; margin-bottom: 5px; border-left: 3px solid gold; padding-left: 10px; }
+        .msg-khach { color: #ccc; margin-bottom: 3px; padding-left: 10px; }
+        
+        input { padding: 15px; border-radius: 10px; border: 1px solid #444; background: #000; color: #fff; width: 85%; margin: 10px 0; font-size: 18px; font-weight: bold; }
+        button.btn-action { background: var(--gold); color: black; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        button.btn-action:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <div id="win-overlay">
+        <img id="dragon-win" src="https://png.pngtree.com/png-vector/20240201/ourmid/pngtree-golden-dragon-flying-on-transparent-background-png-image_11585806.png">
+        <div class="win-text">SIÊU THẮNG LỚN!</div>
+        <div id="win-amt" style="font-size: 40px; color: lime;">+0</div>
+        <button class="btn-action" onclick="closeWin()" style="margin-top: 20px;">NHẬN THƯỞNG</button>
+    </div>
+
+    <div id="auth-screen" style="margin-top: 100px;">
+        <div class="box" style="max-width: 450px; margin: auto;">
+            <h2 class="adm-title">QUÂN ADM .VN</h2>
+            <input type="text" id="username" placeholder="Tên tài khoản...">
+            <input type="password" id="password" placeholder="Mật khẩu...">
+            <br><br>
+            <button class="btn-action" style="width: 100%; height: 60px; font-size: 25px;" onclick="handleAuth()">VÀO SÒNG</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden container">
+        <div class="box adm-border" style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="id-display" style="font-size: 20px;"></div>
+            <div style="font-size: 40px; color: lime; font-weight: 900;">VÀNG: <span id="user-xu">0</span></div>
+        </div>
+
+        <div class="box">
+            <div style="color: red; font-weight: 900;">🔥 SIÊU HŨ RỒNG: 100.000.000 🔥</div>
+            <div id="timer">10</div>
+            <div id="dice-res">⚀ ⚁ ⚂</div>
+            <div id="res-text" style="font-size: 22px; font-weight: bold; color: gold; margin-bottom: 10px;">CHỜ PHIÊN...</div>
+            <input type="number" id="bet-amt" placeholder="Nhập vàng cược...">
+            <div style="margin-top: 10px;">
+                <button id="btn-tai" class="btn-bet" style="background: red; color: white;" onclick="setBet('TAI')">TÀI</button>
+                <button id="btn-xiu" class="btn-bet" style="background: white; color: black;" onclick="setBet('XIU')">XỈU</button>
+            </div>
+        </div>
+
+        <div class="grid-ctrl">
+            <div class="box">
+                <div style="color: #888; text-align: left; font-size: 14px;">💬 TRÒ CHUYỆN</div>
+                <div id="chat-box" class="chat-area"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="chat-msg" placeholder="Nhập tin nhắn..." style="flex: 1; margin: 0;">
+                    <button class="btn-action" onclick="sendChat()">GỬI</button>
+                </div>
+            </div>
+
+            <div class="box adm-border">
+                <div style="color: gold; font-weight: 900;">🎁 NHẬP GIFTCODE</div>
+                <input type="text" id="gift-code" placeholder="Mã quà tặng...">
+                <button class="btn-action" style="width: 100%;" onclick="useGift()">XÁC NHẬN MÃ</button>
+                
+                <div id="adm-panel" class="hidden" style="margin-top: 20px; border-top: 1px dotted gold; padding-top: 10px;">
+                    <div style="color: lime; font-weight: 900;">🛠 QUẢN LÝ ADM</div>
+                    <input type="text" id="target" placeholder="Tên khách...">
+                    <input type="number" id="amt" placeholder="Số vàng...">
+                    <button class="btn-action" style="background: lime; width: 100%;" onclick="bomXu()">BƠM VÀNG</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let xu = 0; let curU = ""; let isAdmin = false; let myBet = null; let timeLeft = 10;
+        const dIcons = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+        function handleAuth() {
+            let u = document.getElementById('username').value.trim();
+            let p = document.getElementById('password').value.trim();
+            if(u.toLowerCase().includes("quan") && p === "quan2026") {
+                startGame("Quân vip38", true);
+            } else if(u !== "") { startGame(u, false); }
+        }
+
+        function startGame(u, adm) {
+            curU = u; isAdmin = adm;
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            xu = adm ? 999999999 : 50000;
+            document.getElementById('id-display').innerHTML = adm ? `<span class="adm-title">ADMIN: QUÂN VIP38</span>` : `<b>${u}</b>`;
+            if(adm) document.getElementById('adm-panel').classList.remove('hidden');
+            updateXu();
+            setInterval(tick, 1000);
+        }
+
+        function tick() {
+            timeLeft--; document.getElementById('timer').innerText = timeLeft;
+            if(timeLeft <= 0) { timeLeft = 10; shake(); }
+        }
+
+        function setBet(t) {
+            myBet = t;
+            document.getElementById('btn-tai').style.border = t === 'TAI' ? "5px solid gold" : "none";
+            document.getElementById('btn-xiu').style.border = t === 'XIU' ? "5px solid gold" : "none";
+        }
+
+        function shake() {
+            let b = parseInt(document.getElementById('bet-amt').value) || 0;
+            let d1=Math.floor(Math.random()*6)+1, d2=Math.floor(Math.random()*6)+1, d3=Math.floor(Math.random()*6)+1;
+            let sum=d1+d2+d3; let res = sum>=11?"TAI":"XIU";
+            document.getElementById('dice-res').innerText = `${dIcons[d1]} ${dIcons[d2]} ${dIcons[d3]}`;
+            
+            if(myBet === res && b > 0) {
+                xu += b; showWin(b*2);
+            } else if(myBet) {
+                xu -= b;
+                document.getElementById('res-text').innerText = "THUA RỒI! -" + b;
+                document.getElementById('res-text').style.color = "red";
+            } else {
+                document.getElementById('res-text').innerText = "KẾT QUẢ: " + res;
+                document.getElementById('res-text').style.color = "gold";
+            }
+            myBet = null; updateXu();
+            document.getElementById('btn-tai').style.border = "none";
+            document.getElementById('btn-xiu').style.border = "none";
+        }
+
+        function showWin(amt) {
+            document.getElementById('win-amt').innerText = "+" + amt.toLocaleString();
+            document.getElementById('win-overlay').style.display = 'flex';
+        }
+        function closeWin() { document.getElementById('win-overlay').style.display = 'none'; }
+
+        function sendChat() {
+            let m = document.getElementById('chat-msg').value;
+            if(!m) return;
+            let cb = document.getElementById('chat-box');
+            let cls = isAdmin ? "msg-adm" : "msg-khach";
+            cb.innerHTML += `<div class="${cls}"><b>${isAdmin?"👑 QUÂN ADM":curU}:</b> ${m}</div>`;
+            document.getElementById('chat-msg').value = "";
+            cb.scrollTop = cb.scrollHeight;
+        }
+
+        function useGift() {
+            let c = document.getElementById('gift-code').value.toUpperCase();
+            if(c === "QUANVIP") { xu += 100000; showWin(100000); }
+            else if(c === "LOCPHT") { xu += 500000; showWin(500000); }
+            else if(c === "TRIAN") { xu += 1000000; showWin(1000000); }
+            else { alert("Mã sai sếp ơi!"); }
+            updateXu();
+        }
+
+        function bomXu() {
+            let t = document.getElementById('target').value;
+            let a = document.getElementById('amt').value;
+            alert(`Đã bơm ${a} xu cho ${t}`);
+        }
+
+        function updateXu() { document.getElementById('user-xu').innerText = xu.toLocaleString(); }
+    </script>
+</body>
+</html>
